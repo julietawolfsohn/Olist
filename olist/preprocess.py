@@ -1,4 +1,17 @@
 import numpy as np
+import pandas as pd
+from math import radians, sin, cos, asin, sqrt
+
+
+def transformar_columnas_datetime(orders):
+    date_columns = ['order_purchase_timestamp', 'order_approved_at', 'order_delivered_carrier_date',
+                'order_delivered_customer_date', 'order_estimated_delivery_date']
+
+    for column in date_columns:
+        orders[column] = pd.to_datetime(orders[column])
+    
+    return orders
+
 
 def puntaje_de_compra(orders):
     orders['es_cinco_estrellas'] = orders['review_score'].apply(lambda x: 1 if x == 5 else 0)
@@ -12,16 +25,6 @@ def load_all_data(path):
     data = {normalize_name(filename): pd.read_csv(f"{path}/{filename}") for filename in files}
     return data
 
-
-def tiempo_de_espera(orders, is_delivered=True):
-    # filtrar por entregados y crea la varialbe tiempo de espera
-    if is_delivered:
-        orders = orders.query("order_status=='delivered'").copy()
-    # compute wait time
-    orders.loc[:, 'tiempo_de_espera'] = \
-        (orders['order_delivered_customer_date'] -
-         orders['order_purchase_timestamp']) / np.timedelta64(24, 'h')
-    return orders
 
 def calcular_numero_productos(df):
     conteo_por_order_id_df = df.groupby('order_id')['order_item_id'].count()
@@ -44,4 +47,3 @@ def calcular_precio_y_transporte(df):
     conteo_por_order_id_df = conteo_por_order_id_df.rename(columns={'price': 'sum_price', 'freight_value': 'sum_freight_value'})
 
     return conteo_por_order_id_df
-
